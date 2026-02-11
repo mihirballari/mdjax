@@ -1,0 +1,56 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+#editor {
+  height: 100%;
+}
+
+.cm-editor {
+  height: 100%;
+  font-family: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+  font-size: 15px;
+}
+
+.cm-editor .cm-scroller {
+  padding: 24px 32px;
+  overflow-y: auto;
+}
+
+.cm-editor .cm-content {
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.cm-editor.cm-focused {
+  outline: none;
+}
+
+.cm-editor .cm-cursor {
+  border-left-color: #333;
+}
+
+.cm-editor .cm-selectionBackground {
+  background: #d7e4f2 !important;
+}
+
+.cm-editor.cm-focused .cm-selectionBackground {
+  background: #bad3f0 !important;
+}
+
+.cm-editor .cm-activeLine {
+  background: transparent;
+}
+
+.cm-editor .cm-gutters {
+  display: none;
+}

@@ -1,0 +1,26 @@
+.cm-math-inline {
+  display: inline;
+  vertical-align: middle;
+}
+
+.cm-math-inline svg {
+  vertical-align: middle;
+  display: inline;
+}
+
+.cm-math-display {
+  display: block;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.cm-math-display svg {
+  display: inline-block;
+}
+
+.cm-math-error {
+  color: #c33;
+  text-decoration: wavy underline #c33;
+  text-underline-offset: 3px;
+  cursor: help;
+}

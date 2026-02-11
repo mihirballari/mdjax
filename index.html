@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mdjax</title>
+    <link rel="stylesheet" href="/src/styles/editor.css" />
+    <link rel="stylesheet" href="/src/styles/headings.css" />
+    <link rel="stylesheet" href="/src/styles/math.css" />
+  </head>
+  <body>
+    <div id="editor"></div>
+    <script>
+      window.MathJax = {
+        startup: { typeset: false },
+        tex: { inlineMath: [], displayMath: [] },
+        svg: { fontCache: "local" },
+      };
+    </script>
+    <script src="/mathjax/tex-svg.js" id="MathJax-script"></script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
