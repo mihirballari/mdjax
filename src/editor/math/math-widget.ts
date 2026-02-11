@@ -1,5 +1,8 @@
+/** @module math-widget — CodeMirror WidgetType subclasses for rendered and errored math. */
+
 import { WidgetType } from "@codemirror/view";
 
+/** Replaces a math region with its rendered MathJax SVG. */
 export class MathWidget extends WidgetType {
   constructor(
     readonly svg: SVGElement,
@@ -27,6 +30,7 @@ export class MathWidget extends WidgetType {
   }
 }
 
+/** Displays the raw LaTeX source with an error tooltip when MathJax rendering fails. */
 export class ErrorMathWidget extends WidgetType {
   constructor(
     readonly tex: string,

@@ -1,33 +1,16 @@
+/** @module setup — Assembles all CodeMirror extensions into a single list. */
+
 import { keymap, highlightSpecialChars, drawSelection, EditorView } from "@codemirror/view";
-import { EditorState, Extension, Prec } from "@codemirror/state";
+import { Extension } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
-import { openFile, saveFile } from "./file-io";
-import { updateTitle } from "./titlebar";
 import { headingsPlugin } from "./headings";
-import { mathPlugin } from "./math-plugin";
+import { mathPlugin } from "./math";
+import { fileKeymap, titleUpdater } from "./keybindings";
 
 const theme = EditorView.theme({});
 
-const fileKeymap = Prec.highest(
-  keymap.of([
-    {
-      key: "Mod-o",
-      run: () => { openFile(); return true; },
-    },
-    {
-      key: "Mod-s",
-      run: () => { saveFile(); return true; },
-    },
-  ])
-);
-
-const titleUpdater = EditorView.updateListener.of((update) => {
-  if (update.docChanged) {
-    updateTitle();
-  }
-});
-
+/** Returns the full extension stack for the editor. */
 export function editorExtensions(): Extension[] {
   return [
     highlightSpecialChars(),

@@ -1,6 +1,9 @@
+/** @module math-detect — Regex-based detection of `$...$` and `$$...$$` math regions. */
+
 import { EditorState } from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
 
+/** A contiguous span of LaTeX source found in the document. */
 export interface MathRegion {
   from: number;
   to: number;
@@ -8,6 +11,7 @@ export interface MathRegion {
   display: boolean;
 }
 
+/** Returns `true` when the range [from, to] falls inside a fenced or inline code node. */
 function isInsideCode(state: EditorState, from: number, to: number): boolean {
   const tree = syntaxTree(state);
   let inside = false;
@@ -29,6 +33,7 @@ function isInsideCode(state: EditorState, from: number, to: number): boolean {
   return inside;
 }
 
+/** Scans `[rangeFrom, rangeTo)` for inline and display math, skipping code blocks and escaped `$`. */
 export function detectMathRegions(
   state: EditorState,
   rangeFrom: number,

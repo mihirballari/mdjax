@@ -1,3 +1,5 @@
+/** @module mathjax-api — Thin wrapper around the global MathJax instance loaded via `<script>`. */
+
 declare global {
   interface Window {
     MathJax?: {
@@ -9,6 +11,7 @@ declare global {
 
 let ready: Promise<void> | null = null;
 
+/** Resolves once `window.MathJax.tex2svgPromise` is available and startup is complete. */
 export function ensureMathJaxReady(): Promise<void> {
   if (ready) return ready;
   ready = new Promise<void>((resolve) => {
@@ -24,6 +27,7 @@ export function ensureMathJaxReady(): Promise<void> {
   return ready;
 }
 
+/** Converts a LaTeX string into an SVGElement via MathJax. */
 export async function renderLatex(tex: string, display: boolean): Promise<SVGElement> {
   await ensureMathJaxReady();
   const wrapper = await window.MathJax!.tex2svgPromise!(tex, { display });

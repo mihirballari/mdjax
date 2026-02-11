@@ -1,10 +1,11 @@
+/** @module main — Application entry point: creates the editor and installs lifecycle hooks. */
+
 import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ask } from "@tauri-apps/plugin-dialog";
 import { editorExtensions } from "./editor/setup";
-import { appState, markClean, isDirty } from "./editor/state";
+import { appState, markClean } from "./editor/state";
 import { updateTitle } from "./editor/titlebar";
+import { installCloseGuard } from "./editor/file-io";
 
 const state = EditorState.create({
   doc: "",
@@ -19,16 +20,4 @@ const view = new EditorView({
 appState.view = view;
 markClean();
 updateTitle();
-
-// Close guard: confirm if unsaved changes
-getCurrentWindow().onCloseRequested(async (event) => {
-  if (isDirty()) {
-    const confirmed = await ask("You have unsaved changes. Close anyway?", {
-      title: "Unsaved Changes",
-      kind: "warning",
-    });
-    if (!confirmed) {
-      event.preventDefault();
-    }
-  }
-});
+installCloseGuard();
