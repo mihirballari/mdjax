@@ -2,10 +2,10 @@
 
 import { keymap, EditorView } from "@codemirror/view";
 import { Prec } from "@codemirror/state";
-import { openFile, saveFile } from "./file-io";
+import { openFile, saveFile, openMarkdownFile } from "./file-io";
 import { updateTitle } from "./titlebar";
 
-/** Highest-priority keymap for file operations (Cmd/Ctrl-O, Cmd/Ctrl-S). */
+/** Highest-priority keymap for file operations (Cmd/Ctrl-O, Cmd/Ctrl-S, Cmd/Ctrl-Shift-O). */
 export const fileKeymap = Prec.highest(
   keymap.of([
     {
@@ -15,6 +15,10 @@ export const fileKeymap = Prec.highest(
     {
       key: "Mod-s",
       run: () => { saveFile(); return true; },
+    },
+    {
+      key: "Mod-Shift-o",
+      run: () => { openMarkdownFile(); return true; },
     },
   ])
 );
