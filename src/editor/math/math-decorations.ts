@@ -6,7 +6,7 @@ import { getCached } from "./math-cache";
 import { cursorInRange } from "../cursor-utils";
 import { MathWidget, ErrorMathWidget } from "./math-widget";
 
-/** Milliseconds to wait after a doc change before rebuilding decorations. */
+/** Milliseconds to wait after a doc change before processing the render queue. */
 export const DEBOUNCE_MS = 200;
 
 /** Extra characters scanned beyond the visible viewport edges. */
@@ -15,12 +15,20 @@ export const VIEWPORT_BUFFER = 500;
 /** Maximum number of rendered SVGs kept in the LRU cache. */
 export const MAX_CACHE_SIZE = 500;
 
+const delimiterMark = Decoration.mark({ class: "cm-math-delimiter" });
+const sourceMark = Decoration.mark({ class: "cm-math-source" });
+
 /**
  * Scan visible (+ buffered) ranges for math regions and return a
- * `DecorationSet` that replaces each region with its rendered widget.
+ * `DecorationSet`.
  *
- * Regions whose LaTeX is not yet cached are collected into `pendingRegions`
- * so the caller can kick off async renders.
+ * - **Inline math** (`$...$`): SVG widget when cursor is outside,
+ *   delimiter + source marks when cursor is inside.
+ * - **Display math** (`$$...$$`): SVG widget when cursor is outside,
+ *   delimiter marks when cursor is inside.
+ *
+ * Display regions whose LaTeX is not yet cached are collected into
+ * `pendingRegions` so the caller can kick off async renders.
  */
 export function buildDecorations(
   view: EditorView,
@@ -35,11 +43,25 @@ export function buildDecorations(
     const regions = detectMathRegions(view.state, scanFrom, scanTo);
 
     for (const region of regions) {
-      if (cursorInRange(view, region.from, region.to)) continue;
+      const delimLen = region.display ? 2 : 1; // $$ vs $
 
+      /* ── Cursor inside: show source with styled delimiters ── */
+      if (cursorInRange(view, region.from, region.to)) {
+        decorations.push(
+          { from: region.from, to: region.from + delimLen, deco: delimiterMark },
+          { from: region.to - delimLen, to: region.to, deco: delimiterMark }
+        );
+        if (!region.display) {
+          decorations.push(
+            { from: region.from + 1, to: region.to - 1, deco: sourceMark }
+          );
+        }
+        continue;
+      }
+
+      /* ── Cursor outside: replace with SVG widget ── */
       const key = `${region.display ? "D" : "I"}:${region.tex}`;
 
-      // Check for cached errors
       const errorMsg = errorMap.get(key);
       if (errorMsg) {
         decorations.push({

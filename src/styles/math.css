@@ -18,6 +18,9 @@
   display: inline-block;
 }
 
+.cm-math-source { font-style: italic; color: #c4b5fd; }
+.cm-math-delimiter { color: #2dd4bf; }
+
 .cm-math-error {
   color: #c33;
   text-decoration: wavy underline #c33;

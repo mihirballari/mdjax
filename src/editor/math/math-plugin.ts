@@ -14,8 +14,11 @@ import { enqueueRender } from "./math-render-queue";
 import { buildDecorations, DEBOUNCE_MS, MAX_CACHE_SIZE } from "./math-decorations";
 
 /**
- * ViewPlugin that detects `$...$` and `$$...$$` regions, renders them
- * asynchronously with MathJax, and replaces the source text with SVG widgets.
+ * ViewPlugin that detects `$...$` and `$$...$$` regions.
+ *
+ * - Inline math is always rendered as styled text (mark decorations).
+ * - Display math is rendered asynchronously with MathJax and replaced
+ *   with SVG widgets when the cursor is outside.
  */
 export const mathPlugin = ViewPlugin.fromClass(
   class {
@@ -23,52 +26,68 @@ export const mathPlugin = ViewPlugin.fromClass(
     private debounceTimer: ReturnType<typeof setTimeout> | null = null;
     private pendingRegions = new Map<string, MathRegion>();
     private errorMap = new Map<string, string>();
+    private renderDirty = false;
 
     constructor(view: EditorView) {
       this.decorations = Decoration.none;
-      this.scheduleRender(view);
+      this.rebuildDecorations(view);
+      this.processQueue(view);
     }
 
     update(update: ViewUpdate) {
+      if (
+        update.docChanged ||
+        update.selectionSet ||
+        update.viewportChanged ||
+        this.renderDirty
+      ) {
+        this.renderDirty = false;
+        this.rebuildDecorations(update.view);
+      }
       if (update.docChanged) {
-        this.scheduleRender(update.view);
-      } else if (update.selectionSet || update.viewportChanged) {
-        this.rebuild(update.view);
+        this.scheduleProcessQueue(update.view);
+      } else if (this.pendingRegions.size > 0) {
+        this.processQueue(update.view);
       }
     }
 
-    private scheduleRender(view: EditorView) {
-      if (this.debounceTimer) clearTimeout(this.debounceTimer);
-      this.debounceTimer = setTimeout(() => {
-        this.debounceTimer = null;
-        this.rebuild(view);
-      }, DEBOUNCE_MS);
-    }
-
-    private rebuild(view: EditorView) {
+    /** Synchronously scan the viewport and rebuild all decorations. */
+    private rebuildDecorations(view: EditorView) {
       this.pendingRegions.clear();
       this.decorations = buildDecorations(
         view,
         this.pendingRegions,
         this.errorMap
       );
+    }
 
-      if (this.pendingRegions.size > 0) {
-        const pending = new Map(this.pendingRegions);
-        for (const [key, region] of pending) {
-          enqueueRender(async () => {
-            try {
-              const svg = await renderLatex(region.tex, region.display);
-              setCached(region.tex, region.display, svg);
-              evictOldest(MAX_CACHE_SIZE);
-              this.errorMap.delete(key);
-            } catch (e) {
-              const msg = e instanceof Error ? e.message : String(e);
-              this.errorMap.set(key, msg);
-            }
-            view.dispatch({});
-          });
-        }
+    /** Debounced wrapper: waits for typing to settle before processing. */
+    private scheduleProcessQueue(view: EditorView) {
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => {
+        this.debounceTimer = null;
+        this.processQueue(view);
+      }, DEBOUNCE_MS);
+    }
+
+    /** Enqueue MathJax renders for all pending display-math regions. */
+    private processQueue(view: EditorView) {
+      if (this.pendingRegions.size === 0) return;
+      const pending = new Map(this.pendingRegions);
+      for (const [key, region] of pending) {
+        enqueueRender(async () => {
+          try {
+            const svg = await renderLatex(region.tex, region.display);
+            setCached(region.tex, region.display, svg);
+            evictOldest(MAX_CACHE_SIZE);
+            this.errorMap.delete(key);
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.errorMap.set(key, msg);
+          }
+          this.renderDirty = true;
+          view.dispatch({});
+        });
       }
     }
 
